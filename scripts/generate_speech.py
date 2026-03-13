@@ -42,19 +42,29 @@ def _health_check() -> bool:
 
 
 def _generate_qwen3(text: str, speaker: str = "Ryan", language: str = "auto",
-                    speed: float = 1.0, style: str | None = None) -> dict:
-    """Generate speech via Qwen3-TTS Custom Voice."""
+                    speed: float = 1.0, style: str | None = None,
+                    model_size: str = "1.7B", voice_name: str | None = None) -> dict:
+    """Generate speech via Qwen3-TTS.
+    
+    If voice_name is provided, use 'clone' mode. Otherwise use 'custom' mode with speaker.
+    """
+    mode = "clone" if voice_name else "custom"
+    
     payload = {
         "text": text,
-        "mode": "custom",
-        "speaker": speaker,
+        "mode": mode,
         "language": language,
         "speed": speed,
-        "model_size": "0.6B",
+        "model_size": model_size,
         "model_quantization": "bf16",
     }
-    if style:
-        payload["instruct"] = style
+    
+    if mode == "clone":
+        payload["voice_name"] = voice_name
+    else:
+        payload["speaker"] = speaker
+        if style:
+            payload["instruct"] = style
 
     r = requests.post(
         f"{BASE_URL}/api/qwen3/generate",
@@ -132,12 +142,31 @@ def generate_speech(config: dict) -> dict:
             voice = config.get("voice", "bf_emma")
             result = _generate_kokoro(text, voice=voice, speed=speed)
         else:
-            speaker = config.get("speaker", "Ryan")
             language = config.get("language", "de")
+            
+            # Default to 1.7B for German unless specified
+            default_model = "1.7B" if language.lower() in ["de", "german"] else "0.6B"
+            model_size = config.get("model_size", default_model)
+            
+            # Extract voice/speaker
+            voice = config.get("voice")
+            speaker = config.get("speaker", "Ryan")
+            
+            # If a known Qwen3 preset speaker is used as 'voice', map it to speaker
+            QWEN_SPEAKERS = ["Ryan", "Aiden", "Vivian", "Serena", "Uncle_Fu", "Dylan", "Eric", "Ono_Anna", "Sohee"]
+            if voice in QWEN_SPEAKERS:
+                speaker = voice
+                voice = None
+            
+            # For German 'Max' and 'Natasha' are currently voice prompts (clone mode)
+            if language.lower() in ["de", "german"] and not voice:
+                voice = "Max" # Default German voice
+
             style = config.get("style")
             result = _generate_qwen3(
                 text, speaker=speaker, language=language,
                 speed=speed, style=style,
+                model_size=model_size, voice_name=voice
             )
 
         audio_url = result.get("audio_url")

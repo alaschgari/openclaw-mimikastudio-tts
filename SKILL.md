@@ -38,21 +38,25 @@ OpenClaw wird:
 
 ### Engines
 
-| Engine | Typ | Default Speaker | Sprachen |
-|--------|-----|-----------------|----------|
-| **qwen3** (default) | Custom Voice (Preset) | Ryan | de (default), en, zh, ja, ko |
+| Engine | Typ | Default Speaker / Voice | Sprachen |
+|--------|-----|-------------------------|----------|
+| **qwen3** (default) | HQ TTS (1.7B) | Max (de), Ryan (en) | de (default), en, zh, ja, ko |
 | **kokoro** | Fast TTS | bf_emma | en (British/American) |
 
-### Qwen3 Preset Speakers
+### Stimmen (Qwen3)
 
-| Speaker | Sprache | Charakter |
-|---------|---------|-----------|
-| Ryan | English | Dynamic male, strong rhythm |
-| Aiden | English | Sunny American male |
-| Vivian | Chinese | Bright young female |
-| Serena | Chinese | Warm gentle female |
-| Ono_Anna | Japanese | Playful female |
-| Sohee | Korean | Warm emotional female |
+Für Deutsch nutzt der Skill standardmäßig das hochqualitative **1.7B Modell**.
+
+| Stimme | Typ | Sprache | Charakter |
+|---------|-----|---------|-----------|
+| **Max** (default) | Clone | Deutsch | Natürliche männliche Stimme (HQ) |
+| **Natasha** | Clone | Deutsch | Natürliche weibliche Stimme (HQ) |
+| Ryan | Preset | English | Dynamic male, strong rhythm |
+| Aiden | Preset | English | Sunny American male |
+| Vivian | Preset | Chinese | Bright young female |
+| Serena | Preset | Chinese | Warm gentle female |
+| Ono_Anna | Preset | Japanese | Playful female |
+| Sohee | Preset | Korean | Warm emotional female |
 
 ### Backend-Status prüfen
 
@@ -67,15 +71,15 @@ OpenClaw wird:
 ## Beispiel-Aufrufe
 
 ```bash
-# Sprache generieren (Qwen3, Speaker Ryan, Default Sprache: de)
+# Sprache generieren (Qwen3, Default: de, Voice: Max, Model: 1.7B)
 python3 scripts/generate_speech.py '{"text": "Guten Tag, Welt"}'
+
+# Mit weiblicher Stimme (Natasha)
+python3 scripts/generate_speech.py '{"text": "Wie geht es dir?", "voice": "Natasha"}'
+
+# Explizite Modell-Wahl (0.6B für Schnelligkeit)
+python3 scripts/generate_speech.py '{"text": "Kurzer Text", "model_size": "0.6B"}'
 
 # Mit Kokoro Engine
 python3 scripts/generate_speech.py '{"text": "Hello World", "engine": "kokoro", "voice": "bf_emma"}'
-
-# Stimmen auflisten
-python3 scripts/list_voices.py
-
-# Backend-Status
-python3 scripts/health_check.py
 ```
