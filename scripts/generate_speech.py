@@ -43,12 +43,17 @@ def _health_check() -> bool:
 
 def _generate_qwen3(text: str, speaker: str = "Ryan", language: str = "auto",
                     speed: float = 1.0, style: str | None = None,
-                    model_size: str = "1.7B", voice_name: str | None = None) -> dict:
+                    model_size: str = "1.7B", voice_name: str | None = None,
+                    temperature: float = 0.8, top_p: float = 0.9) -> dict:
     """Generate speech via Qwen3-TTS.
     
     If voice_name is provided, use 'clone' mode. Otherwise use 'custom' mode with speaker.
     """
     mode = "clone" if voice_name else "custom"
+    
+    # Normalize language name for backend map
+    if language.lower() in ["de", "german"]:
+        language = "German"
     
     payload = {
         "text": text,
@@ -57,6 +62,8 @@ def _generate_qwen3(text: str, speaker: str = "Ryan", language: str = "auto",
         "speed": speed,
         "model_size": model_size,
         "model_quantization": "bf16",
+        "temperature": temperature,
+        "top_p": top_p,
     }
     
     if mode == "clone":
@@ -162,11 +169,16 @@ def generate_speech(config: dict) -> dict:
             if language.lower() in ["de", "german"] and not voice:
                 voice = "Max" # Default German voice
 
+            # Extract parameters with HQ defaults for German
+            temp = float(config.get("temperature", 0.8))
+            top_p = float(config.get("top_p", 0.9))
+
             style = config.get("style")
             result = _generate_qwen3(
                 text, speaker=speaker, language=language,
                 speed=speed, style=style,
-                model_size=model_size, voice_name=voice
+                model_size=model_size, voice_name=voice,
+                temperature=temp, top_p=top_p
             )
 
         audio_url = result.get("audio_url")
